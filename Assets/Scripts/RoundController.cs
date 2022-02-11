@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace Core
@@ -16,9 +17,12 @@ namespace Core
 
         private float stepTimer;
         public int currentStep;
-        public bool isRight;
+        public int currentRow;
+        public int direction;
 
-        public GridNode currentNode;
+        public List<GridNode> currentNode = new List<GridNode>();
+
+        public int playAmount;
         
         public void Start()
         {
@@ -34,33 +38,69 @@ namespace Core
                 Step();
                 stepTimer = speed;
             }
+
+            if (Input.anyKeyDown)
+            {
+                currentRow++;
+            }
         }
 
         private void Step()
         {
+            if (direction == 0)
+                direction = 1;
+            
             if (currentStep >= sizeX - 1)
             {
-                isRight = false;
+                direction = -1;
             }
 
-            if (currentStep <= 0)
+            if (currentStep <= -playAmount + 1)
             {
-                isRight = true;
+                direction = 1;
             }
             
-            currentStep += isRight ? 1 : -1;
+            currentStep += direction;
+
+
+            for (int i = 0; i < currentNode.Count; i++)
+            {
+                currentNode[i].Activate(false);
+            }
             
-            if(currentNode)
-                currentNode.Activate(false);
+            currentNode.Clear();
+
+            if (currentStep >= 0 && currentStep < sizeX)
+            {
+                grid[currentStep, currentRow].Activate(true);
+                currentNode.Add(grid[currentStep, currentRow]);
+            }
+
             
-            grid[currentStep,0].Activate(true);
-            currentNode = grid[currentStep, 0];
+
+            int secondNodeStep = currentStep + 1;
+            
+            if (secondNodeStep >= 0 && secondNodeStep < sizeX )
+            {
+                grid[secondNodeStep,currentRow].Activate(true);
+                currentNode.Add(grid[secondNodeStep, currentRow]);
+            }
+            
+            int thirdNodeStep = currentStep + 2;
+
+            if (thirdNodeStep >= 0 && thirdNodeStep < sizeX)
+            {
+                grid[thirdNodeStep,currentRow].Activate(true);
+                currentNode.Add(grid[thirdNodeStep, currentRow]);
+            }
         }
 
         public void SpawnGrid()
         {
             grid = new GridNode[sizeX,sizeY];
 
+            currentRow = 0;
+            
             for (int x = 0; x < grid.GetLength(0); x++)
             {
                 for (int y = 0; y < grid.GetLength(1); y++)
